@@ -2,6 +2,27 @@ const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
+const BankDetailsSchema = new mongoose.Schema(
+  {
+    accountNo: { type: String, default: '', select: false },
+    bankName: { type: String, default: '' },
+    ifsc: { type: String, default: '' },
+    pan: { type: String, default: '', select: false },
+    uan: { type: String, default: '', select: false },
+  },
+  { _id: false }
+);
+
+const SalaryInfoSchema = new mongoose.Schema(
+  {
+    baseSalary: { type: Number, default: 120000, select: false },
+    hra: { type: Number, default: 24000, select: false },
+    allowances: { type: Number, default: 12000, select: false },
+    netPay: { type: Number, default: 10000, select: false },
+  },
+  { _id: false }
+);
+
 const UserSchema = new mongoose.Schema(
   {
     employeeId: {
@@ -86,6 +107,78 @@ const UserSchema = new mongoose.Schema(
     avatarUrl: {
       type: String,
       default: '',
+    },
+    // Extended Employee & Job Details
+    designation: {
+      type: String,
+      default: 'Software Engineer',
+      trim: true,
+    },
+    department: {
+      type: String,
+      default: 'Engineering',
+      trim: true,
+    },
+    manager: {
+      type: String,
+      default: 'Alex Morgan',
+      trim: true,
+    },
+    location: {
+      type: String,
+      default: 'San Francisco, CA',
+      trim: true,
+    },
+    joiningDate: {
+      type: Date,
+      default: Date.now,
+    },
+    // Resume & Bio Details
+    about: {
+      type: String,
+      default: '',
+    },
+    skills: {
+      type: [String],
+      default: [],
+    },
+    certifications: {
+      type: [String],
+      default: [],
+    },
+    // Private Information
+    dateOfBirth: {
+      type: String,
+      default: '',
+    },
+    residentialAddress: {
+      type: String,
+      default: '',
+    },
+    nationality: {
+      type: String,
+      default: 'United States',
+    },
+    personalEmail: {
+      type: String,
+      default: '',
+    },
+    gender: {
+      type: String,
+      default: 'Unspecified',
+    },
+    maritalStatus: {
+      type: String,
+      default: 'Single',
+    },
+    // Embedded Sub-documents
+    bankDetails: {
+      type: BankDetailsSchema,
+      default: () => ({}),
+    },
+    salaryInfo: {
+      type: SalaryInfoSchema,
+      default: () => ({}),
     },
   },
   {
