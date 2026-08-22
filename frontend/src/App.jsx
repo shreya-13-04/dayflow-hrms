@@ -12,7 +12,9 @@ import { Attendance } from './pages/Attendance';
 import { TimeOff } from './pages/TimeOff';
 import { Payroll } from './pages/Payroll';
 import { Analytics } from './pages/Analytics';
+import { Reports } from './pages/Reports';
 import { Profile } from './pages/Profile';
+import { Settings } from './pages/Settings';
 
 export default function App() {
   return (
@@ -30,13 +32,15 @@ export default function App() {
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/attendance" element={<Attendance />} />
               <Route path="/time-off" element={<TimeOff />} />
+              <Route path="/payroll" element={<Payroll />} />
               <Route path="/profile" element={<Profile />} />
+              <Route path="/settings" element={<Settings />} />
 
               {/* Admin/HR Restricted routes */}
               <Route element={<RoleRoute allowedRoles={['ADMIN', 'HR']} />}>
                 <Route path="/employees" element={<Employees />} />
-                <Route path="/payroll" element={<Payroll />} />
                 <Route path="/analytics" element={<Analytics />} />
+                <Route path="/reports" element={<Reports />} />
               </Route>
             </Route>
           </Route>

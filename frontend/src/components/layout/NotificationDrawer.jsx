@@ -1,110 +1,143 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { Bell, Check, Clock, Calendar, CreditCard, UserPlus, X } from 'lucide-react';
-
-const notificationsData = [
-  { id: 1, title: 'Leave request submitted', time: '10m ago', desc: 'Sarah Jenkins requested 2 days Sick Leave', icon: Calendar, unread: true },
-  { id: 2, title: 'Attendance reminder', time: '1h ago', desc: 'Remember to check-in before 09:30 AM', icon: Clock, unread: true },
-  { id: 3, title: 'Leave approved', time: '3h ago', desc: 'PTO request for Sept 01 - 05 approved by HR', icon: Check, unread: false },
-  { id: 4, title: 'Payroll updated', time: 'Yesterday', desc: 'August 2026 salary draft updated for review', icon: CreditCard, unread: false },
-  { id: 5, title: 'New employee onboarded', time: '2 days ago', desc: 'David Miller assigned to Engineering team', icon: UserPlus, unread: false },
-];
+import React, { useState, useEffect } from 'react';
+import { Bell, CheckCheck, X, Clock, CheckCircle2, AlertCircle } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
 
 export function NotificationDrawer() {
-  const [open, setOpen] = useState(false);
-  const [notifications, setNotifications] = useState(notificationsData);
-  const popoverRef = useRef(null);
+  const { authFetch } = useAuth();
+  const [isOpen, setIsOpen] = useState(false);
+  const [notifications, setNotifications] = useState([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [loading, setLoading] = useState(false);
 
-  const unreadCount = notifications.filter(n => n.unread).length;
+  const fetchNotifications = async () => {
+    try {
+      setLoading(true);
+      const { ok, data } = await authFetch('/notifications');
+      if (ok && data.success) {
+        setNotifications(data.data || []);
+        setUnreadCount(data.unreadCount || 0);
+      }
+    } catch (err) {
+      console.log('Failed to fetch notifications:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    function handleClickOutside(event) {
-      if (popoverRef.current && !popoverRef.current.contains(event.target)) {
-        setOpen(false);
-      }
-    }
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    fetchNotifications();
+    const interval = setInterval(fetchNotifications, 30000); // Polling every 30s
+    return () => clearInterval(interval);
   }, []);
 
-  const markAllRead = () => {
-    setNotifications(notifications.map(n => ({ ...n, unread: false })));
+  const handleMarkAllRead = async () => {
+    try {
+      const { ok } = await authFetch('/notifications/read-all', { method: 'PUT' });
+      if (ok) {
+        setUnreadCount(0);
+        setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+      }
+    } catch (err) {
+      console.log('Failed to mark all as read:', err);
+    }
+  };
+
+  const handleMarkSingleRead = async (id) => {
+    try {
+      const { ok } = await authFetch(`/notifications/${id}/read`, { method: 'PUT' });
+      if (ok) {
+        setNotifications(prev => prev.map(n => n._id === id ? { ...n, read: true } : n));
+        setUnreadCount(prev => Math.max(0, prev - 1));
+      }
+    } catch (err) {
+      console.log('Failed to mark as read:', err);
+    }
   };
 
   return (
-    <div className="relative" ref={popoverRef}>
+    <div className="relative">
+      {/* Bell Trigger Button */}
       <button
-        onClick={() => setOpen(!open)}
+        onClick={() => {
+          setIsOpen(!isOpen);
+          if (!isOpen) fetchNotifications();
+        }}
         className="p-1.5 text-stone-600 hover:text-stone-900 rounded-md hover:bg-stone-100 relative transition-colors cursor-pointer"
         aria-label="Notifications"
       >
-        <Bell className="w-4 h-4" />
+        <Bell className="w-4 h-4 text-stone-700" />
         {unreadCount > 0 && (
-          <span className="absolute top-1 right-1 w-2 h-2 bg-plum-800 rounded-full ring-2 ring-white" />
+          <span className="absolute top-1 right-1 w-4 h-4 bg-[#581c38] text-white text-[9px] font-bold rounded-full flex items-center justify-center font-mono animate-pulse">
+            {unreadCount > 9 ? '9+' : unreadCount}
+          </span>
         )}
       </button>
 
-      {open && (
-        <div className="absolute right-0 mt-2 w-80 sm:w-96 bg-white border border-stone-200 rounded-lg shadow-dropdown z-50 overflow-hidden text-left">
-          {/* Header */}
-          <div className="px-4 py-3 border-b border-stone-100 flex items-center justify-between bg-stone-50/50">
-            <div className="flex items-center space-x-2">
-              <span className="text-xs font-bold text-stone-900 uppercase tracking-wider">Activity & Alerts</span>
-              {unreadCount > 0 && (
-                <span className="px-1.5 py-0.2 text-[10px] font-semibold bg-plum-100 text-plum-900 rounded-full">
-                  {unreadCount} new
-                </span>
-              )}
-            </div>
-            <div className="flex items-center space-x-2">
-              {unreadCount > 0 && (
-                <button
-                  onClick={markAllRead}
-                  className="text-[11px] text-plum-800 hover:text-plum-950 font-medium hover:underline"
-                >
-                  Mark all read
+      {/* Notification Dropdown Drawer */}
+      {isOpen && (
+        <>
+          <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)} />
+
+          <div className="absolute right-0 mt-2 w-80 sm:w-96 bg-white border border-stone-200 rounded-lg shadow-dropdown z-50 overflow-hidden text-left text-xs">
+            <div className="p-3 bg-stone-50 border-b border-stone-200 flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <span className="font-bold text-stone-900">Notifications</span>
+                {unreadCount > 0 && (
+                  <span className="px-1.5 py-0.5 rounded text-[10px] bg-[#f5e8ef] text-[#581c38] font-bold">
+                    {unreadCount} new
+                  </span>
+                )}
+              </div>
+              <div className="flex items-center space-x-2">
+                {unreadCount > 0 && (
+                  <button
+                    onClick={handleMarkAllRead}
+                    className="text-[11px] font-medium text-stone-600 hover:text-[#581c38] flex items-center"
+                  >
+                    <CheckCheck className="w-3.5 h-3.5 mr-1 text-[#581c38]" /> Mark all read
+                  </button>
+                )}
+                <button onClick={() => setIsOpen(false)} className="text-stone-400 hover:text-stone-600">
+                  <X className="w-4 h-4" />
                 </button>
+              </div>
+            </div>
+
+            {/* List */}
+            <div className="max-h-80 overflow-y-auto divide-y divide-stone-100">
+              {loading ? (
+                <div className="p-6 text-center text-stone-500 font-mono">Loading notifications...</div>
+              ) : notifications.length === 0 ? (
+                <div className="p-6 text-center text-stone-400 italic">No notifications yet.</div>
+              ) : (
+                notifications.map((n) => (
+                  <div
+                    key={n._id}
+                    onClick={() => !n.read && handleMarkSingleRead(n._id)}
+                    className={`p-3 transition-colors cursor-pointer flex items-start space-x-2.5 ${
+                      !n.read ? 'bg-plum-50/40 hover:bg-plum-50/70' : 'bg-white hover:bg-stone-50'
+                    }`}
+                  >
+                    <div className="p-1 rounded bg-stone-100 text-[#581c38] shrink-0 mt-0.5">
+                      {!n.read ? <AlertCircle className="w-3.5 h-3.5 text-[#581c38]" /> : <CheckCircle2 className="w-3.5 h-3.5 text-stone-400" />}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between">
+                        <span className={`font-semibold text-stone-900 truncate ${!n.read ? 'font-bold' : ''}`}>
+                          {n.title}
+                        </span>
+                        <span className="text-[10px] font-mono text-stone-400 shrink-0 ml-1">
+                          {new Date(n.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </span>
+                      </div>
+                      <p className="text-stone-600 text-[11px] mt-0.5 leading-normal">{n.message}</p>
+                    </div>
+                  </div>
+                ))
               )}
-              <button onClick={() => setOpen(false)} className="text-stone-400 hover:text-stone-600">
-                <X className="w-4 h-4" />
-              </button>
             </div>
           </div>
-
-          {/* List */}
-          <div className="max-h-80 overflow-y-auto divide-y divide-stone-100">
-            {notifications.map((item) => {
-              const Icon = item.icon;
-              return (
-                <div
-                  key={item.id}
-                  className={`p-3 text-xs flex items-start space-x-3 hover:bg-stone-50 transition-colors ${
-                    item.unread ? 'bg-plum-50/20' : ''
-                  }`}
-                >
-                  <div className="p-1.5 rounded-md bg-stone-100 text-stone-600 shrink-0 mt-0.5 border border-stone-200/60">
-                    <Icon className="w-3.5 h-3.5" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between">
-                      <span className={`font-semibold ${item.unread ? 'text-stone-900' : 'text-stone-700'}`}>
-                        {item.title}
-                      </span>
-                      <span className="text-[10px] text-stone-400">{item.time}</span>
-                    </div>
-                    <p className="text-stone-500 mt-0.5 line-clamp-2">{item.desc}</p>
-                  </div>
-                  {item.unread && (
-                    <span className="w-1.5 h-1.5 bg-plum-800 rounded-full shrink-0 mt-1.5" />
-                  )}
-                </div>
-              );
-            })}
-          </div>
-
-          <div className="p-2 border-t border-stone-100 bg-stone-50/50 text-center">
-            <span className="text-[11px] text-stone-500 font-medium">End of activity log</span>
-          </div>
-        </div>
+        </>
       )}
     </div>
   );

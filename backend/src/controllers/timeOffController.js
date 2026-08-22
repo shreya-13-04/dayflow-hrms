@@ -1,6 +1,7 @@
 const LeaveRequest = require('../models/LeaveRequest');
 const LeaveBalance = require('../models/LeaveBalance');
 const Attendance = require('../models/Attendance');
+const { sendNotification, notifyAdminsAndHR } = require('../services/notificationService');
 
 // Helper to count inclusive days between two YYYY-MM-DD strings
 function getDaysDifference(startStr, endStr) {
@@ -113,6 +114,15 @@ const createLeaveRequest = async (req, res, next) => {
       reason: reason || '',
       attachmentUrl: attachmentUrl || '',
       status: 'PENDING',
+    });
+
+    // Notify Admin and HR
+    await notifyAdminsAndHR({
+      type: 'LEAVE_REQUEST',
+      title: 'New Time-Off Request',
+      message: `${req.user.name} (${req.user.employeeId}) requested ${totalDays} day(s) of ${leaveType} leave.`,
+      relatedEntity: leaveRequest._id.toString(),
+      relatedEntityType: 'LeaveRequest',
     });
 
     res.status(201).json({
@@ -292,7 +302,6 @@ const updateLeaveStatus = async (req, res, next) => {
         });
 
         if (att) {
-          // Preserve existing checkIn if employee punched in, otherwise set status to LEAVE
           if (!att.checkIn) {
             att.status = 'LEAVE';
             att.notes = `Approved ${leaveRequest.leaveType} Leave`;
@@ -323,6 +332,16 @@ const updateLeaveStatus = async (req, res, next) => {
     leaveRequest.approvedBy = req.user._id;
     leaveRequest.approvedAt = new Date();
     await leaveRequest.save();
+
+    // Send Notification to Employee
+    await sendNotification({
+      recipientId: leaveRequest.user,
+      type: newStatus === 'APPROVED' ? 'LEAVE_APPROVED' : 'LEAVE_REJECTED',
+      title: `Time-Off Request ${newStatus}`,
+      message: `Your ${leaveRequest.leaveType} leave request (${leaveRequest.startDate} to ${leaveRequest.endDate}) was ${newStatus.toLowerCase()}.${adminComment ? ` HR Note: ${adminComment}` : ''}`,
+      relatedEntity: leaveRequest._id.toString(),
+      relatedEntityType: 'LeaveRequest',
+    });
 
     res.status(200).json({
       success: true,

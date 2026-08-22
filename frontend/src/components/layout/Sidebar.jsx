@@ -8,19 +8,23 @@ import {
   Calendar, 
   CreditCard, 
   BarChart2, 
-  Settings, 
+  FileSpreadsheet,
+  Settings as SettingsIcon, 
+  User as UserIcon,
   ChevronDown,
   Building2
 } from 'lucide-react';
 
 const navItems = [
-  { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard, roles: ['ADMIN', 'HR', 'EMPLOYEE'] },
+  { name: 'Overview', path: '/dashboard', icon: LayoutDashboard, roles: ['ADMIN', 'HR', 'EMPLOYEE'] },
   { name: 'People', path: '/employees', icon: Users, roles: ['ADMIN', 'HR'] },
+  { name: 'My Profile', path: '/profile', icon: UserIcon, roles: ['EMPLOYEE'] },
   { name: 'Attendance', path: '/attendance', icon: Clock, roles: ['ADMIN', 'HR', 'EMPLOYEE'] },
   { name: 'Time Off', path: '/time-off', icon: Calendar, roles: ['ADMIN', 'HR', 'EMPLOYEE'] },
-  { name: 'Payroll', path: '/payroll', icon: CreditCard, roles: ['ADMIN', 'HR'] },
+  { name: 'Payroll', path: '/payroll', icon: CreditCard, roles: ['ADMIN', 'HR', 'EMPLOYEE'] },
   { name: 'Insights', path: '/analytics', icon: BarChart2, roles: ['ADMIN', 'HR'] },
-  { name: 'Settings', path: '/profile', icon: Settings, roles: ['ADMIN', 'HR', 'EMPLOYEE'] },
+  { name: 'Reports', path: '/reports', icon: FileSpreadsheet, roles: ['ADMIN', 'HR'] },
+  { name: 'Settings', path: '/settings', icon: SettingsIcon, roles: ['ADMIN', 'HR', 'EMPLOYEE'] },
 ];
 
 export function Sidebar({ mobileOpen, setMobileOpen }) {
@@ -64,7 +68,7 @@ export function Sidebar({ mobileOpen, setMobileOpen }) {
           <button className="mt-2.5 w-full flex items-center justify-between px-2.5 py-1.5 rounded bg-white border border-stone-200 text-xs font-semibold text-stone-800 shadow-subtle hover:bg-stone-50 transition-colors">
             <div className="flex items-center space-x-2 truncate">
               <Building2 className="w-3.5 h-3.5 text-stone-500 shrink-0" />
-              <span className="truncate">{user?.companyName || 'Acme Corp'}</span>
+              <span className="truncate">{user?.companyName || 'Dayflow Corp'}</span>
             </div>
             <ChevronDown className="w-3.5 h-3.5 text-stone-400 shrink-0 ml-1" />
           </button>
@@ -104,7 +108,7 @@ export function Sidebar({ mobileOpen, setMobileOpen }) {
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-xs font-semibold text-stone-900 truncate">{user?.name || 'Alex Morgan'}</p>
-              <p className="text-[10px] font-mono text-stone-500 truncate">{user?.employeeId || 'OI-ALMO-2026-0001'}</p>
+              <p className="text-[10px] font-mono text-stone-500 truncate">{user?.employeeId || 'DF-ALMO-2026-0001'}</p>
             </div>
           </div>
         </div>
