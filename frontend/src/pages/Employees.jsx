@@ -1,13 +1,14 @@
-import React, { useState } from 'react';
-import { Plus, Search, Filter, Mail, Phone, ExternalLink, ChevronRight, User, Shield, Building, CreditCard, Award, ArrowLeft } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Plus, Search, Filter, Mail, Phone, ChevronRight, Award, ArrowLeft } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 import { PageHeader } from '../components/ui/PageHeader';
 import { Button } from '../components/ui/Button';
 import { Badge } from '../components/ui/Badge';
 import { Card } from '../components/ui/Card';
 
-const employeesData = [
+const fallbackEmployees = [
   { 
-    id: 'OI-SAJE2026-0012', 
+    id: 'OI-SAJE-2026-0012', 
     name: 'Sarah Jenkins', 
     designation: 'Software Engineer', 
     department: 'Engineering', 
@@ -18,31 +19,14 @@ const employeesData = [
     joiningDate: '12 Jan 2024',
     avatarInitials: 'SJ',
     about: 'Full-stack software engineer specializing in scalable React and Node.js systems.',
-    skills: ['React', 'TypeScript', 'Node.js', 'MongoDB', 'System Architecture'],
-    certifications: ['AWS Certified Solutions Architect', 'Scrum Master Professional'],
-    privateInfo: {
-      dob: '14 March 1995',
-      address: '742 Evergreen Terrace, San Francisco, CA',
-      nationality: 'United States',
-      gender: 'Female',
-      maritalStatus: 'Single',
-    },
-    bank: {
-      accountNo: '••••••••4892',
-      bankName: 'First National Bank',
-      ifsc: 'FNB0001829',
-      pan: 'ABCDE1234F',
-      uan: '100982349182',
-    },
-    salary: {
-      base: '$120,000 / year',
-      hra: '$24,000',
-      allowances: '$12,000',
-      netMonthly: '$10,000 / month',
-    }
+    skills: ['React', 'TypeScript', 'Node.js', 'MongoDB'],
+    certifications: ['AWS Certified Solutions Architect'],
+    privateInfo: { dob: '14 March 1995', address: '742 Evergreen Terrace, San Francisco, CA', nationality: 'United States', gender: 'Female', maritalStatus: 'Single' },
+    bank: { accountNo: '••••••••4892', bankName: 'First National Bank', ifsc: 'FNB0001829', pan: 'ABCDE1234F', uan: '100982349182' },
+    salary: { base: '$120,000 / year', hra: '$24,000', allowances: '$12,000', netMonthly: '$10,000 / month' }
   },
   { 
-    id: 'OI-DAMI2026-0013', 
+    id: 'OI-DAMI-2026-0013', 
     name: 'David Miller', 
     designation: 'Backend Engineer', 
     department: 'Engineering', 
@@ -52,109 +36,63 @@ const employeesData = [
     location: 'Austin, TX',
     joiningDate: '01 June 2025',
     avatarInitials: 'DM',
-    about: 'Backend software engineer focused on microservices, MongoDB databases, and cloud infrastructure.',
-    skills: ['Node.js', 'Express', 'MongoDB', 'Redis', 'Docker'],
-    certifications: ['MongoDB Certified Developer', 'Docker Certified Associate'],
-    privateInfo: {
-      dob: '22 August 1993',
-      address: '102 Tech Boulevard, Austin, TX',
-      nationality: 'United States',
-      gender: 'Male',
-      maritalStatus: 'Married',
-    },
-    bank: {
-      accountNo: '••••••••9102',
-      bankName: 'Chase Bank',
-      ifsc: 'CHAS009182',
-      pan: 'FGHIJ5678K',
-      uan: '100982349900',
-    },
-    salary: {
-      base: '$114,000 / year',
-      hra: '$22,800',
-      allowances: '$11,400',
-      netMonthly: '$9,500 / month',
-    }
-  },
-  { 
-    id: 'OI-ALMO2026-0011', 
-    name: 'Alex Morgan', 
-    designation: 'HR Lead & Administrator', 
-    department: 'Human Resources', 
-    email: 'alex.m@company.com', 
-    phone: '+1 (555) 123-4567',
-    status: 'Present',
-    location: 'San Francisco, CA',
-    joiningDate: '15 Sept 2023',
-    avatarInitials: 'AM',
-    about: 'People Operations Lead managing organizational growth, talent retention, and HR strategy.',
-    skills: ['People Operations', 'Payroll Compliance', 'Talent Acquisition', 'HR Strategy'],
-    certifications: ['SHRM Senior Certified Professional (SHRM-SCP)', 'HRCI SPHR'],
-    privateInfo: {
-      dob: '08 November 1988',
-      address: '450 Mission Street, San Francisco, CA',
-      nationality: 'United States',
-      gender: 'Non-Binary',
-      maritalStatus: 'Married',
-    },
-    bank: {
-      accountNo: '••••••••1122',
-      bankName: 'Wells Fargo',
-      ifsc: 'WFC0004918',
-      pan: 'LMNOP9012Q',
-      uan: '100982341122',
-    },
-    salary: {
-      base: '$130,000 / year',
-      hra: '$26,000',
-      allowances: '$13,000',
-      netMonthly: '$10,833 / month',
-    }
-  },
-  { 
-    id: 'OI-ELRO2026-0014', 
-    name: 'Elena Rostova', 
-    designation: 'Product Designer', 
-    department: 'Design', 
-    email: 'elena.r@company.com', 
-    phone: '+1 (555) 456-7890',
-    status: 'Present',
-    location: 'New York, NY',
-    joiningDate: '10 Feb 2025',
-    avatarInitials: 'ER',
-    about: 'UI/UX product designer specializing in dense enterprise productivity interfaces.',
-    skills: ['Figma', 'UI/UX Design', 'Design Systems', 'User Research'],
-    certifications: ['Nielsen Norman UX Master Certification'],
-    privateInfo: {
-      dob: '05 May 1996',
-      address: '88 Broadway Ave, New York, NY',
-      nationality: 'United States',
-      gender: 'Female',
-      maritalStatus: 'Single',
-    },
-    bank: {
-      accountNo: '••••••••7741',
-      bankName: 'Citibank',
-      ifsc: 'CITI009281',
-      pan: 'RSTUV3456W',
-      uan: '100982347741',
-    },
-    salary: {
-      base: '$105,000 / year',
-      hra: '$21,000',
-      allowances: '$10,500',
-      netMonthly: '$8,750 / month',
-    }
+    about: 'Backend software engineer focused on microservices and cloud database infrastructure.',
+    skills: ['Node.js', 'Express', 'MongoDB', 'Docker'],
+    certifications: ['MongoDB Certified Developer'],
+    privateInfo: { dob: '22 August 1993', address: '102 Tech Boulevard, Austin, TX', nationality: 'United States', gender: 'Male', maritalStatus: 'Married' },
+    bank: { accountNo: '••••••••9102', bankName: 'Chase Bank', ifsc: 'CHAS009182', pan: 'FGHIJ5678K', uan: '100982349900' },
+    salary: { base: '$114,000 / year', hra: '$22,800', allowances: '$11,400', netMonthly: '$9,500 / month' }
   },
 ];
 
 export function Employees() {
+  const { authFetch } = useAuth();
+  const [employees, setEmployees] = useState(fallbackEmployees);
   const [selectedEmp, setSelectedEmp] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [deptFilter, setDeptFilter] = useState('All');
   const [activeTab, setActiveTab] = useState('resume');
+  const [fetching, setFetching] = useState(false);
 
-  const filteredEmployees = employeesData.filter(emp => {
+  useEffect(() => {
+    async function loadEmployees() {
+      try {
+        setFetching(true);
+        const { ok, data } = await authFetch('/employees');
+        if (ok && data.success && data.data && data.data.length > 0) {
+          const formatted = data.data.map(emp => ({
+            id: emp.employeeId,
+            name: emp.name || `${emp.firstName} ${emp.lastName}`,
+            designation: emp.role === 'ADMIN' || emp.role === 'HR' ? 'HR Administrator' : 'Software Engineer',
+            department: emp.role === 'ADMIN' || emp.role === 'HR' ? 'Human Resources' : 'Engineering',
+            email: emp.email,
+            phone: emp.phone || '+1 (555) 000-0000',
+            status: 'Present',
+            location: 'San Francisco, CA',
+            joiningDate: new Date(emp.createdAt || Date.now()).toLocaleDateString(),
+            avatarInitials: `${emp.firstName[0]}${emp.lastName[0]}`.toUpperCase(),
+            about: `${emp.role} team member at ${emp.companyName}.`,
+            skills: ['People Operations', 'System Architecture', 'Node.js', 'React'],
+            certifications: ['Certified HR Professional'],
+            privateInfo: { dob: '14 March 1995', address: 'San Francisco, CA', nationality: 'United States', gender: 'Unspecified', maritalStatus: 'Single' },
+            bank: { accountNo: '••••••••4892', bankName: 'First National Bank', ifsc: 'FNB0001829', pan: 'ABCDE1234F', uan: '100982349182' },
+            salary: { base: '$120,000 / year', hra: '$24,000', allowances: '$12,000', netMonthly: '$10,000 / month' }
+          }));
+
+          // Combine fetched database users with fallback demonstration records
+          setEmployees([...formatted, ...fallbackEmployees]);
+        }
+      } catch (err) {
+        console.log('Using default directory records:', err);
+      } finally {
+        setFetching(false);
+      }
+    }
+
+    loadEmployees();
+  }, []);
+
+  const filteredEmployees = employees.filter(emp => {
     const matchesSearch = emp.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
                           emp.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
                           emp.designation.toLowerCase().includes(searchQuery.toLowerCase());
@@ -240,7 +178,6 @@ export function Employees() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <Card className="md:col-span-2" title="About Employee" compact>
               <p className="text-xs text-stone-700 leading-relaxed">{selectedEmp.about}</p>
-              
               <div className="mt-4 pt-3 border-t border-stone-100">
                 <h4 className="text-[10px] font-bold uppercase tracking-wider text-stone-500 mb-2">Core Skills & Expertise</h4>
                 <div className="flex flex-wrap gap-1.5">
@@ -426,9 +363,9 @@ export function Employees() {
               </tr>
             </thead>
             <tbody className="divide-y divide-stone-100">
-              {filteredEmployees.map((emp) => (
+              {filteredEmployees.map((emp, index) => (
                 <tr 
-                  key={emp.id} 
+                  key={emp.id || index} 
                   onClick={() => setSelectedEmp(emp)}
                   className="hover:bg-stone-50/80 transition-colors cursor-pointer group"
                 >

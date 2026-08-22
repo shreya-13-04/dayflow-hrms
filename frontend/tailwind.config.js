@@ -20,12 +20,6 @@ export default {
           900: '#581c38',
           950: '#390c22',
         },
-        ivory: {
-          50: '#fcfbf8',
-          100: '#f8f6f0',
-          200: '#f0ece1',
-          300: '#e6dfce',
-        },
       },
       fontFamily: {
         sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
